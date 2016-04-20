@@ -23,7 +23,7 @@
 	}
 })(function () {
 	"use strict";
-	
+
 	if (typeof window == "undefined" || typeof window.document == "undefined") {
 		return function() {
 			throw new Error( "Sortable.js requires a window with a document" );
@@ -468,7 +468,8 @@
 		},
 
 
-		_onTouchMove: function (/**TouchEvent*/evt) {
+		_onTouchMove: function( /**TouchEvent*/ evt) {
+			var _this = this;
 			if (tapEvt) {
 				// only set the status to dragging, when we are actually dragging
 				if (!Sortable.active) {
@@ -483,13 +484,20 @@
 					dy = touch.clientY - tapEvt.clientY,
 					translate3d = evt.touches ? 'translate3d(' + dx + 'px,' + dy + 'px,0)' : 'translate(' + dx + 'px,' + dy + 'px)';
 
-				moved = true;
-				touchEvt = touch;
+				var throttle = function(evt) {
+						moved = true;
+						touchEvt = touch;
+						_css(ghostEl, 'webkitTransform', translate3d);
+						_css(ghostEl, 'mozTransform', translate3d);
+						_css(ghostEl, 'msTransform', translate3d);
+						_css(ghostEl, 'transform', translate3d);
+				};
 
-				_css(ghostEl, 'webkitTransform', translate3d);
-				_css(ghostEl, 'mozTransform', translate3d);
-				_css(ghostEl, 'msTransform', translate3d);
-				_css(ghostEl, 'transform', translate3d);
+				if (window.requestAnimationFrame) {
+					window.requestAnimationFrame(function() { throttle(evt); });
+				} else {
+					setTimeout(function() { throttle(evt); }, 66);
+				}
 
 				evt.preventDefault();
 			}
